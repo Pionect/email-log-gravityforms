@@ -3,7 +3,7 @@
 /**
   Plugin Name: Email Log - Gravity Forms
   Description: An add-on Plugin to Email Log Plugin, that allows you to see the SMTP response
-  Version: 0.1
+  Version: 0.2
   Author: Pionect
   Author URI: http://www.pionect.nl
   Text Domain: email-log
@@ -41,19 +41,29 @@ class Email_Log_Gravityforms {
         add_action('gform_after_email', array(&$this, 'end_email_output_buffering'), 10, 5);
     }
 
+    /**
+     * Enable debug for phpmailer
+     */
     function enable_debug_phpmailer($phpmailer) {
         $phpmailer->SMTPDebug = 2;
     }
-
+    
+    /**
+     * Set a random uniqid to headers of the email
+     */
     function start_email_output_buffering($email) {
-        $email['headers']['PNCT-TOKEN'] = "PNCT-TOKEN: '" . uniqid() . "'";
+        $email['headers']['PNCT-TOKEN'] = "PNCT-TOKEN: " . uniqid() . "";
 
         ob_start();
 
         return $email;
     }
-
+    
+    /**
+     * Update the wp_email_log.smtp_response column with the response. 
+     */
     function end_email_output_buffering($is_success, $to, $subject, $message, $headers) {
+        global $wpdb;
         
         if (array_key_exists('PNCT-TOKEN', $headers) == FALSE) {
             return;
@@ -61,7 +71,12 @@ class Email_Log_Gravityforms {
         
         $smtp_debug = ob_get_clean();
         
-        //sql query to save $smtp_debug where email with the token
+        $table_name = $wpdb->prefix . Email_Log_Gravityforms::TABLE_NAME;
+        
+        $sql = "UPDATE `" . $table_name . "` SET `smtp_response` = '". $smtp_debug ."'"
+                . "WHERE `headers` LIKE '%" . $headers['PNCT-TOKEN'] . "%' ;";
+        
+        $wpdb->query($sql);
         
     }
 
@@ -85,7 +100,7 @@ class Email_Log_Gravityforms {
             echo ( isset($header['smtp_response']) ? esc_attr($header['smtp_response']) : 'N/A' );
         }
     }
-
+    
 }
 
 new Email_Log_Gravityforms();

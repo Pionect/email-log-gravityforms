@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Db table update
+ * Db email_log table update
  *
  * @package     Email Log - Gravity Forms
  * @subpackage  Update
  * @author      Pionect
- * @since       0.1
+ * @since       0.2
  */
 // Exit if accessed directly
 if (!defined('ABSPATH'))
@@ -22,7 +22,7 @@ class Email_Log_Table_Update {
     /**
      * Update email_log table
      *
-     * @since  0.1
+     * @since  0.2
      * @static
      * @access private
      *
