@@ -22,6 +22,7 @@ class Email_Log_Gravityforms {
 
     function __construct() {
         add_action('init', array($this,'init'), 100);
+        
     }
     
     function init(){
@@ -94,10 +95,9 @@ class Email_Log_Gravityforms {
      */
     function display_new_smtp_response_column($column_name, $item) {
 
-        $header = self::parse_header($item->headers);
-
         if ($column_name == 'smtp_response') {
-            echo ( isset($header['smtp_response']) ? esc_attr($header['smtp_response']) : 'N/A' );
+            $response = $item->smtp_response;
+            echo ( strlen($response) > 0 ? substr($response,0,60).'...'   : 'N/A' );
         }
     }
     
