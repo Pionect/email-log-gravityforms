@@ -19,10 +19,12 @@ require_once dirname( __FILE__ ) . '/include/update.php';
 class Email_Log_Gravityforms {
     
     const TABLE_NAME               = 'email_log';          /* Database table name */
+    const VERSION                  = '0.2';
+    // JS Stuff
+    const JS_HANDLE                = 'email-log-gravityforms';
 
     function __construct() {
         add_action('init', array($this,'init'), 100);
-        
     }
     
     function init(){
@@ -36,10 +38,32 @@ class Email_Log_Gravityforms {
             add_filter(EmailLog::HOOK_LOG_COLUMNS, array(&$this, 'add_new_smtp_response_column'));
             add_action(EmailLog::HOOK_LOG_DISPLAY_COLUMNS, array(&$this, 'display_new_smtp_response_column'), 10, 2);
         }
+        
+        // Register hooks
+        add_action( 'admin_menu', array( &$this, 'register_settings_page' ));
 
         add_action('phpmailer_init', array(&$this, 'enable_debug_phpmailer'));
         add_filter('gform_pre_send_email', array(&$this, 'start_email_output_buffering'), 10, 1);
         add_action('gform_after_email', array(&$this, 'end_email_output_buffering'), 10, 5);
+        
+        add_action('wp_ajax_show_smtp_response', array(&$this, 'display_smtp_response_callback'));
+    }
+    
+    /**
+     * Register the settings page
+     */
+    function register_settings_page() {
+        // enqueue JavaScript
+        add_action( 'admin_print_scripts', array( &$this, 'include_js' ) );
+    }
+    
+    /**
+     * Include JavaScript displaying email response.
+     *
+     * @since 0.2
+     */
+    function include_js() {
+        wp_enqueue_script( self::JS_HANDLE, plugins_url( '/js/email-log-grafityforms.js', __FILE__ ), array( 'jquery' ), self::VERSION, TRUE );
     }
 
     /**
@@ -78,7 +102,6 @@ class Email_Log_Gravityforms {
                 . "WHERE `headers` LIKE '%" . $headers['PNCT-TOKEN'] . "%' ;";
         
         $wpdb->query($sql);
-        
     }
 
     /**
@@ -97,8 +120,30 @@ class Email_Log_Gravityforms {
 
         if ($column_name == 'smtp_response') {
             $response = $item->smtp_response;
-            echo ( strlen($response) > 0 ? substr($response,0,60).'...'   : 'N/A' );
+            echo ( strlen($response) > 0 ? substr($response,0,60).'... [<a href="#" class="email_response" id="email_response_'.$item->id.'">View Response</a>]'   : 'N/A' );
         }
+    }
+    
+    /**
+     * AJAX callback for displaying email SMTP response
+     *
+     * @since 0.2
+     */
+    function display_smtp_response_callback(){
+        global $wpdb;
+        
+        $email_id   = absint( $_POST['email_id'] );
+        
+        $table_name = $wpdb->prefix . Email_Log_Gravityforms::TABLE_NAME;
+        
+        // Select the matching item from the database
+        $query      = $wpdb->prepare( "SELECT smtp_response FROM " . $table_name . " WHERE id = %d", $email_id );
+        $content    = $wpdb->get_results( $query );
+        
+        // Write the full response to the window
+        echo $content[0]->smtp_response;
+       
+        die(); // this is required to return a proper result
     }
     
 }
