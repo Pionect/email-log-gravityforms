@@ -1,16 +1,34 @@
 <?php
 
 /**
-  Plugin Name: Email Log - Gravityforms
+  Plugin Name: Email Log - Gravity Forms
   Description: An add-on Plugin to Email Log Plugin, that allows you to see the SMTP response
   Version: 0.1
   Author: Pionect
   Author URI: http://www.pionect.nl
   Text Domain: email-log
  */
+
+if ( ! defined( 'EMAIL_LOG_GRAVITYFORMS_PLUGIN_FILE' ) ) {
+    define( 'EMAIL_LOG_GRAVITYFORMS_PLUGIN_FILE', __FILE__ );
+}
+
+// handle update email_log table update
+require_once dirname( __FILE__ ) . '/include/update.php';
+
 class Email_Log_Gravityforms {
+    
+    const TABLE_NAME               = 'email_log';          /* Database table name */
 
     function __construct() {
+        add_action('init', array($this,'init'), 100);
+    }
+    
+    function init(){
+        if (is_plugin_active('email-log/email-log.php') == FALSE) {
+            // show error that this plugins needs 'Email Log' 
+            return;
+        }
         
         // column hooks
         if (is_admin()) {
@@ -24,7 +42,7 @@ class Email_Log_Gravityforms {
     }
 
     function enable_debug_phpmailer($phpmailer) {
-        $phpmailer->SMTPDebug = true;
+        $phpmailer->SMTPDebug = 2;
     }
 
     function start_email_output_buffering($email) {
@@ -40,8 +58,11 @@ class Email_Log_Gravityforms {
         if (array_key_exists('PNCT-TOKEN', $headers) == FALSE) {
             return;
         }
-
+        
         $smtp_debug = ob_get_clean();
+        
+        //sql query to save $smtp_debug where email with the token
+        
     }
 
     /**
@@ -67,13 +88,4 @@ class Email_Log_Gravityforms {
 
 }
 
-// Start this plugin once all other plugins are fully loaded
-function Email_Log_Gravityforms() {
-    require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-    if (is_plugin_active('email-log/email-log.php')) {
-        global $EmailLogSmtpResponse;
-        $EmailLogSmtpResponse = new Email_Log_Gravityforms();
-    }
-}
-
-add_action('init', 'Email_Log_Gravityforms', 100);
+new Email_Log_Gravityforms();
