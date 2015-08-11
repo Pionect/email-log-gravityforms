@@ -18,7 +18,7 @@ class Email_Log_Gf_Admin_Screen {
      * @since 0.2
      */
     function include_js() {
-        wp_enqueue_script(EmailLog::JS_HANDLE, plugins_url('/js/email-log-grafityforms.js', __FILE__), array('jquery'), EmailLog::VERSION, TRUE);
+        wp_enqueue_script(EmailLog::JS_HANDLE, plugins_url('/js/email-log-grafityforms.js', EMAIL_LOG_GRAVITYFORMS_PLUGIN_FILE), array('jquery'), EmailLog::VERSION, TRUE);
     }
 
     /**
@@ -58,7 +58,7 @@ class Email_Log_Gf_Admin_Screen {
         $content = $wpdb->get_var($query);
 
         // Write the full response to the window
-        echo $content;
+        echo '<pre>' . $content . '</pre>'; 
 
         die(); // this is required to return a proper result
     }
