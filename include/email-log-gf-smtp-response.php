@@ -41,7 +41,7 @@ class Email_Log_Gf_Smtp_Response {
         
         $table_name = $wpdb->prefix . Email_Log_Gravityforms::TABLE_NAME;
         
-        $sql = "UPDATE `" . $table_name . "` SET `smtp_response` = '". $smtp_debug ."'"
+        $sql = "UPDATE `" . $table_name . "` SET `smtp_response` = '". mysql_real_escape_string($smtp_debug) ."'"
                 . "WHERE `headers` LIKE '%" . $headers['PNCT-TOKEN'] . "%' ;";
         
         $wpdb->query($sql);
